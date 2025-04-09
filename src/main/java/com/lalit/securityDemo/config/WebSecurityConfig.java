@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -24,8 +25,11 @@ public class WebSecurityConfig {
 
     private final UserDetailsService userDetailsService;
 
-    public WebSecurityConfig(UserDetailsService userDetailsService) {
+    private  final JwtFilter jwtFilter;
+
+    public WebSecurityConfig(UserDetailsService userDetailsService, JwtFilter jwtFilter) {
         this.userDetailsService = userDetailsService;
+        this.jwtFilter = jwtFilter;
     }
 
     @Bean
@@ -39,27 +43,29 @@ public class WebSecurityConfig {
                         .anyRequest().authenticated()           // Requires authentication for all other requests
                 )
                 .httpBasic(Customizer.withDefaults())
-                .formLogin(Customizer.withDefaults());
+                .formLogin(Customizer.withDefaults())
+                .addFilterBefore(jwtFilter , UsernamePasswordAuthenticationFilter.class)
+        ;
         return http.build();
     }
 
-    @Bean
-    public UserDetailsService userDetailsService(){
-
-        UserDetails lalit = User
-                .withUsername("Lalit")
-                //if without the i hit this auth without the password encoder then i get the error
-                // so tempoaray we disable the password encoder using the {noop}
-                .password("{noop}Lalit@123")
-                .roles("USER")
-                .build();
-        UserDetails vivek =User
-                .withUsername("Vivek")
-                .password("{noop}Vivek@123")
-                .roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(lalit,vivek);
-    }
+//    @Bean
+//    public UserDetailsService userDetailsService(){
+//
+//        UserDetails lalit = User
+//                .withUsername("Lalit")
+//                //if without the i hit this auth without the password encoder then i get the error
+//                // so tempoaray we disable the password encoder using the {noop}
+//                .password("{noop}Lalit@123")
+//                .roles("USER")
+//                .build();
+//        UserDetails vivek =User
+//                .withUsername("Vivek")
+//                .password("{noop}Vivek@123")
+//                .roles("USER")
+//                .build();
+//        return new InMemoryUserDetailsManager(lalit,vivek);
+//    }
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder(){

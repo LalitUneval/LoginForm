@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.websocket.Decoder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -66,6 +67,8 @@ public class JwtService {
         return secretKey="yMSC8Ta3Zo0pIDh0MVVrxghb46ks8pqyxfeuNOnSWlY=";
     }
 
+
+
     /*
         //which we get the secreat key we decode it into base 64
     private SecretKey generateKey() {
@@ -77,4 +80,28 @@ public class JwtService {
 
     }
     */
+    //step 3 for the validation of the jwt token
+
+    public String extractUserName(String token) {
+        return Jwts
+                .parser()
+                .verifyWith(generateKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
+
+    public boolean validToken(String token, UserDetails userDetails) {
+        String username = extractUserName(token);
+        Date expirationDate = Jwts
+                .parser()
+                .verifyWith(generateKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getExpiration();
+
+        return username.equals(userDetails.getUsername()) && !expirationDate.before(new Date());
+    }
 }
